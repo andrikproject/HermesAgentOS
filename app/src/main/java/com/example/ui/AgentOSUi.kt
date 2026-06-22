@@ -1709,6 +1709,8 @@ fun SettingsConsoleScreen(viewModel: AgentViewModel) {
     val apiKeyCustom by viewModel.apiKeyCustom.collectAsStateWithLifecycle()
     val customEndpointCustom by viewModel.customEndpointCustom.collectAsStateWithLifecycle()
     val selectedModel by viewModel.selectedModel.collectAsStateWithLifecycle()
+    val availableModels by viewModel.availableModels.collectAsStateWithLifecycle()
+    val isFetchingModels by viewModel.isFetchingModels.collectAsStateWithLifecycle()
 
     val skillWebSearch by viewModel.skillWebSearchEnabled.collectAsStateWithLifecycle()
     val skillFileExplorer by viewModel.skillFileExplorerEnabled.collectAsStateWithLifecycle()
@@ -1741,11 +1743,16 @@ fun SettingsConsoleScreen(viewModel: AgentViewModel) {
     var scope = rememberCoroutineScope()
 
     val providerModels = mapOf(
-        "gemini" to listOf("gemini-3.5-flash", "gemini-1.5-pro", "gemini-2.0-flash", "gemini-2.5-pro"),
-        "openai" to listOf("gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo", "o1-mini"),
-        "anthropic" to listOf("claude-3-5-sonnet", "claude-3-5-haiku", "claude-3-opus"),
-        "openrouter" to listOf("nousresearch/hermes-3-llama-3-8b", "meta-llama/llama-3-70b-instruct", "mistralai/mistral-7b-instruct"),
-        "custom" to listOf("custom-model", "hermes-3", "llama3", "mistral")
+        "gemini" to listOf("gemini-3.5-flash", "gemini-1.5-pro", "gemini-2.0-flash", "gemini-2.5-pro", "gemini-2.5-flash", "gemini-1.5-flash"),
+        "openai" to listOf("gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo", "o1", "o1-mini", "o3-mini"),
+        "anthropic" to listOf("claude-sonnet-4", "claude-3-5-sonnet", "claude-3-5-haiku", "claude-3-opus", "claude-3-haiku"),
+        "openrouter" to listOf("nousresearch/hermes-3-llama-3-8b", "meta-llama/llama-3-70b-instruct", "anthropic/claude-sonnet-4", "openai/gpt-4o", "deepseek/deepseek-chat", "mistralai/mistral-large"),
+        "deepseek" to listOf("deepseek-chat", "deepseek-reasoner", "deepseek-coder"),
+        "mistral" to listOf("mistral-large", "mistral-medium", "mistral-small", "codestral"),
+        "groq" to listOf("llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768", "gemma2-9b-it"),
+        "xai" to listOf("grok-2", "grok-3", "grok-3-mini"),
+        "together" to listOf("mixtral-8x22b", "llama-3.3-70b", "qwen-2.5-72b"),
+        "custom" to listOf("custom-model", "hermes-3", "llama3", "mistral", "qwen")
     )
 
     Column(
@@ -1958,11 +1965,16 @@ fun SettingsConsoleScreen(viewModel: AgentViewModel) {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             listOf(
                                 Triple("gemini", "Google Gemini", Icons.Default.SmartToy),
-                                Triple("openai", "OpenAI Client", Icons.Default.Explore),
-                                Triple("anthropic", "Claude Anthropic", Icons.Default.Fingerprint),
-                                Triple("openrouter", "OpenRouter AI", Icons.Default.Hub),
-                                Triple("custom", "Local / Ollama", Icons.Default.Cloud)
-                            ).chunked(2).forEach { rowItems ->
+                                Triple("openai", "OpenAI", Icons.Default.Explore),
+                                Triple("anthropic", "Claude", Icons.Default.Fingerprint),
+                                Triple("openrouter", "OpenRouter", Icons.Default.Hub),
+                                Triple("deepseek", "DeepSeek", Icons.Default.Code),
+                                Triple("mistral", "Mistral AI", Icons.Default.SmartToy),
+                                Triple("groq", "Groq", Icons.Default.Bolt),
+                                Triple("xai", "xAI Grok", Icons.Default.Science),
+                                Triple("together", "Together", Icons.Default.Hub),
+                                Triple("custom", "Local/Ollama", Icons.Default.Cloud)
+                            ).chunked(3).forEach { rowItems ->
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -2119,6 +2131,37 @@ fun SettingsConsoleScreen(viewModel: AgentViewModel) {
                                     )
                                 )
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    // Call viewModel.fetchModelsFromEndpoint when both endpoint and key are entered
+                                    if (endpointCustomInput.isNotBlank()) {
+                                        viewModel.fetchModelsFromEndpoint(endpointCustomInput.trim(), keyCustomInput.trim())
+                                    }
+                                },
+                                enabled = endpointCustomInput.isNotBlank(),
+                                colors = ButtonDefaults.buttonColors(containerColor = GridGreen),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("🔍 Auto-Detect Available Models", fontSize = 12.sp)
+                            }
+                            // Show loading indicator when fetching
+                            if (viewModel.isFetchingModels.collectAsState().value) {
+                                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
+                            }
+                            // Show detected models
+                            val availableModels by viewModel.availableModels.collectAsState()
+                            if (availableModels.isNotEmpty()) {
+                                Text(
+                                    "Detected Models (${availableModels.size}):",
+                                    color = GridGreen,
+                                    fontSize = 11.sp,
+                                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                                )
+                            }
                         }
 
                         // Model selection dropdown lists
@@ -2133,9 +2176,11 @@ fun SettingsConsoleScreen(viewModel: AgentViewModel) {
                         )
 
                         val listModels = providerModels[activeProvider] ?: listOf("custom-model")
-                        Row(
+                        @OptIn(ExperimentalLayoutApi::class)
+                        FlowRow(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             listModels.forEach { modelName ->
                                 val isModelSel = selectedModelInput == modelName

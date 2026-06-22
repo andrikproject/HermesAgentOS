@@ -79,6 +79,13 @@ class AgentViewModel(application: Application) : AndroidViewModel(application) {
     private val _selectedModel = MutableStateFlow(sharedPrefs.getString("selected_ai_model", "gemini-3.5-flash") ?: "gemini-3.5-flash")
     val selectedModel: StateFlow<String> = _selectedModel.asStateFlow()
 
+    // --- Auto-detect models feature ---
+    private val _availableModels = MutableStateFlow<List<String>>(emptyList())
+    val availableModels: StateFlow<List<String>> = _availableModels.asStateFlow()
+
+    private val _isFetchingModels = MutableStateFlow(false)
+    val isFetchingModels: StateFlow<Boolean> = _isFetchingModels.asStateFlow()
+
     // --- Hermes Gateway & Dashboard Configurations ---
     private val _gatewayUrl = MutableStateFlow(sharedPrefs.getString("gateway_url", "http://10.0.2.2:8642") ?: "http://10.0.2.2:8642")
     val gatewayUrl: StateFlow<String> = _gatewayUrl.asStateFlow()
@@ -660,8 +667,13 @@ class AgentViewModel(application: Application) : AndroidViewModel(application) {
         return when (provider) {
             "gemini" -> "gemini-3.5-flash"
             "openai" -> "gpt-4o-mini"
-            "anthropic" -> "claude-3-5-sonnet"
+            "anthropic" -> "claude-sonnet-4"
             "openrouter" -> "nousresearch/hermes-3-llama-3-8b"
+            "deepseek" -> "deepseek-chat"
+            "mistral" -> "mistral-large"
+            "groq" -> "llama-3.3-70b"
+            "xai" -> "grok-2"
+            "together" -> "mixtral-8x22b"
             "custom" -> "custom-model"
             else -> "gemini-3.5-flash"
         }
@@ -669,14 +681,33 @@ class AgentViewModel(application: Application) : AndroidViewModel(application) {
 
     fun isModelSupportedByProvider(provider: String, model: String): Boolean {
         val list = when (provider) {
-            "gemini" -> listOf("gemini-3.5-flash", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-pro")
-            "openai" -> listOf("gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo", "o1-mini")
-            "anthropic" -> listOf("claude-3-5-sonnet", "claude-3-5-haiku", "claude-3-opus")
-            "openrouter" -> listOf("nousresearch/hermes-3-llama-3-8b", "meta-llama/llama-3-70b-instruct", "mistralai/mistral-7b-instruct")
+            "gemini" -> listOf(
+                "gemini-3.5-flash", "gemini-2.5-flash", "gemini-2.5-pro",
+                "gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.0-flash"
+            )
+            "openai" -> listOf(
+                "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo",
+                "o1", "o1-mini", "o3-mini"
+            )
+            "anthropic" -> listOf(
+                "claude-sonnet-4", "claude-3-5-sonnet", "claude-3-opus",
+                "claude-3-haiku", "claude-3-5-haiku"
+            )
+            "openrouter" -> listOf(
+                "nousresearch/hermes-3-llama-3-8b",
+                "meta-llama/llama-3-70b-instruct",
+                "mistralai/mistral-7b-instruct"
+            )
+            "deepseek" -> listOf("deepseek-chat", "deepseek-reasoner", "deepseek-coder")
+            "mistral" -> listOf("mistral-large", "mistral-medium", "mistral-small", "mistral-tiny", "codestral")
+            "groq" -> listOf("llama-3.3-70b", "llama-3.1-8b", "mixtral-8x7b", "gemma2-9b", "deepseek-r1-distill")
+            "xai" -> listOf("grok-2", "grok-3", "grok-3-mini")
+            "together" -> listOf("mixtral-8x22b", "llama-3.3-70b", "deepseek-llm-67b", "qwen-2.5-72b")
             "custom", "gateway" -> listOf("custom-model", "hermes-3", "llama3", "mistral")
             else -> emptyList()
         }
-        return list.contains(model) || provider == "custom" || provider == "gateway"
+        // Check static list first, then fall back to auto-detected models for custom/any provider
+        return list.contains(model) || _availableModels.value.contains(model) || provider == "custom" || provider == "gateway"
     }
 
     fun autoDetectProviderFromKey(key: String): String {
@@ -686,8 +717,31 @@ class AgentViewModel(application: Application) : AndroidViewModel(application) {
             trimmed.startsWith("sk-ant-") -> "anthropic"
             trimmed.startsWith("sk-or-v1-") -> "openrouter"
             trimmed.startsWith("sk-") -> "openai"
+            trimmed.startsWith("gsk_") -> "groq"
+            trimmed.startsWith("xai-") -> "xai"
+            trimmed.startsWith("hf_") -> "custom" // HuggingFace
             trimmed.startsWith("http://") || trimmed.startsWith("https://") -> "custom"
             else -> ""
+        }
+    }
+
+    // --- Auto-detect models ---
+    fun fetchModelsFromEndpoint(endpoint: String, apiKey: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isFetchingModels.value = true
+            _apiError.value = null
+            try {
+                val models = MultiAiApiClient.fetchAvailableModels(endpoint, apiKey)
+                _availableModels.value = models
+                if (models.isEmpty()) {
+                    _apiError.value = "No models returned from endpoint. Check your endpoint URL and API key."
+                }
+            } catch (e: Exception) {
+                _apiError.value = "Failed to fetch models: ${e.localizedMessage}"
+                _availableModels.value = emptyList()
+            } finally {
+                _isFetchingModels.value = false
+            }
         }
     }
 

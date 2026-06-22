@@ -5,13 +5,16 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
+import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Url
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 // --- OpenAI Class Types ---
@@ -129,5 +132,48 @@ object MultiAiApiClient {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(AnthropicApiService::class.java)
+    }
+
+    /**
+     * Fetches available models from an OpenAI-compatible /v1/models endpoint.
+     * Supports: OpenAI, DeepSeek, Mistral AI, Groq, Cohere, xAI/Grok, HuggingFace,
+     * Together AI, OpenRouter, and any other OpenAI-compatible API.
+     *
+     * Response format expected:
+     *   { "data": [ { "id": "model-name", ... }, ... ] }
+     * OpenRouter returns the same format.
+     */
+    fun fetchAvailableModels(endpoint: String, apiKey: String): List<String> {
+        val models = mutableListOf<String>()
+        try {
+            val url = if (endpoint.endsWith("/")) "${endpoint}v1/models" else "$endpoint/v1/models"
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "Bearer $apiKey")
+                .get()
+                .build()
+            val response = okHttpClient.newCall(request).execute()
+            if (response.isSuccessful) {
+                val body = response.body?.string()
+                if (body != null) {
+                    val json = JSONObject(body)
+                    val data = json.optJSONArray("data")
+                    if (data != null) {
+                        for (i in 0 until data.length()) {
+                            val item = data.optJSONObject(i)
+                            val id = item?.optString("id")
+                            if (id != null) {
+                                models.add(id)
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: IOException) {
+            // Network error - return empty list
+        } catch (e: Exception) {
+            // Parse error - return empty list
+        }
+        return models
     }
 }
