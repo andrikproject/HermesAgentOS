@@ -2185,7 +2185,6 @@ fun SettingsConsoleScreen(viewModel: AgentViewModel) {
                                 val isModelSel = selectedModelInput == modelName
                                 Box(
                                     modifier = Modifier
-                                        .weight(1f)
                                         .clip(RoundedCornerShape(6.dp))
                                         .background(if (isModelSel) AlertAmber else CyberObsidian)
                                         .border(1.dp, if (isModelSel) AlertAmber else SlateMedium, RoundedCornerShape(6.dp))
