@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outermost sleek glowing ring -->
+    <path
+        android:strokeWidth="1.5"
+        android:strokeColor="#14B8A6"
+        android:strokeLineCap="round"
+        android:pathData="M54,22 A32,32 0 1,1 53.9,22" />
+
+    <!-- Inner orbit dynamic ring -->
+    <path
+        android:strokeWidth="1.0"
+        android:strokeColor="#F97316"
+        android:strokeLineCap="round"
+        android:pathData="M54,30 A24,24 0 1,0 53.9,30" />
+
+    <!-- LEFT WING OF HERMES (Agent Speed & Transmission) -->
+    <path
+        android:pathData="M38,42 C26,42 22,54 34,60 C40,63 46,55 46,50 Z"
+        android:strokeWidth="1"
+        android:strokeColor="#14B8A6">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="22"
+                android:startY="42"
+                android:endX="46"
+                android:endY="60"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#14B8A6" />
+                <item android:offset="1.0" android:color="#0F766E" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- RIGHT WING OF HERMES -->
+    <path
+        android:pathData="M70,42 C82,42 86,54 74,60 C68,63 62,55 62,50 Z"
+        android:strokeWidth="1"
+        android:strokeColor="#14B8A6">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="86"
+                android:startY="42"
+                android:endX="62"
+                android:endY="60"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#14B8A6" />
+                <item android:offset="1.0" android:color="#0F766E" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Elegant Stylized "H" Glyph in the Center -->
+    <path
+        android:pathData="M44,38 L44,70 M64,38 L64,70 M44,54 L64,54"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="54"
+                android:startY="38"
+                android:endX="54"
+                android:endY="70"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFF" />
+                <item android:offset="0.5" android:color="#E2E8F0" />
+                <item android:offset="1.0" android:color="#94A3B8" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Central Neural Intelligence Core Node (Orange Globe) -->
+    <path
+        android:pathData="M54,54m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="49.5"
+                android:startY="49.5"
+                android:endX="58.5"
+                android:endY="58.5"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF9D00" />
+                <item android:offset="1.0" android:color="#F97316" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Top & Bottom logic connectors (The neural poles) -->
+    <path
+        android:fillColor="#14B8A6"
+        android:pathData="M54,38m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+    <path
+        android:fillColor="#14B8A6"
+        android:pathData="M54,70m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+
+</vector>
