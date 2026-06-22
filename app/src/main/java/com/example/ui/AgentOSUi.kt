@@ -514,11 +514,10 @@ fun ChatTerminalScreen(viewModel: AgentViewModel, onStartVoiceInput: () -> Unit 
                         onClick = { imagePickerLauncher.launch("image/*") },
                         enabled = !isGenerating,
                         modifier = Modifier
-                            .height(48.dp)
-                            .width(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .height(40.dp)
+                            .width(40.dp)
+                            .clip(RoundedCornerShape(10.dp))
                             .background(SlateMedium)
-                            .border(1.dp, HermesOrange.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                     ) {
                         Icon(
                             imageVector = Icons.Default.Image,
@@ -534,11 +533,11 @@ fun ChatTerminalScreen(viewModel: AgentViewModel, onStartVoiceInput: () -> Unit 
                         onClick = { documentPickerLauncher.launch("*/*") },
                         enabled = !isGenerating,
                         modifier = Modifier
-                            .height(48.dp)
-                            .width(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .height(40.dp)
+                            .width(40.dp)
+                            .clip(RoundedCornerShape(10.dp))
                             .background(SlateMedium)
-                            .border(1.dp, CyberTeal.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                            .border(1.dp, CyberTeal.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
                     ) {
                         Icon(
                             imageVector = Icons.Default.AttachFile,
@@ -547,7 +546,7 @@ fun ChatTerminalScreen(viewModel: AgentViewModel, onStartVoiceInput: () -> Unit 
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
 
                     OutlinedTextField(
                         value = textState,
@@ -581,11 +580,11 @@ fun ChatTerminalScreen(viewModel: AgentViewModel, onStartVoiceInput: () -> Unit 
                             onClick = { onStartVoiceInput() },
                             enabled = !isGenerating,
                             modifier = Modifier
-                                .height(52.dp)
-                                .width(52.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .height(40.dp)
+                                .width(40.dp)
+                                .clip(RoundedCornerShape(10.dp))
                                 .background(SlateMedium)
-                                .border(1.dp, HermesOrange.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                                .border(1.dp, HermesOrange.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Mic,
@@ -628,18 +627,18 @@ fun ChatTerminalScreen(viewModel: AgentViewModel, onStartVoiceInput: () -> Unit 
                             containerColor = HermesOrange,
                             contentColor = CyberObsidian
                         ),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(10.dp),
                         enabled = !isGenerating && (textState.isNotBlank() || selectedAttachments.isNotEmpty()),
-                        modifier = Modifier.height(52.dp)
+                        modifier = Modifier.height(40.dp)
                     ) {
                         if (isGenerating) {
                             CircularProgressIndicator(
                                 color = CyberObsidian,
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Icon(Icons.Default.PlayArrow, contentDescription = "Send")
+                            Icon(Icons.Default.Send, contentDescription = "Send", modifier = Modifier.size(18.dp))
                         }
                     }
                 }
