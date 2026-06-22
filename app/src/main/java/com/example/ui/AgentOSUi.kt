@@ -1967,11 +1967,11 @@ fun SettingsConsoleScreen(viewModel: AgentViewModel) {
                                 Triple("openai", "OpenAI", Icons.Default.Explore),
                                 Triple("anthropic", "Claude", Icons.Default.Fingerprint),
                                 Triple("openrouter", "OpenRouter", Icons.Default.Hub),
-                                Triple("deepseek", "DeepSeek", Icons.Default.Code),
+                                Triple("deepseek", "DeepSeek", Icons.Default.Cloud),
                                 Triple("mistral", "Mistral AI", Icons.Default.SmartToy),
-                                Triple("groq", "Groq", Icons.Default.Bolt),
-                                Triple("xai", "xAI Grok", Icons.Default.Science),
-                                Triple("together", "Together", Icons.Default.Hub),
+                                Triple("groq", "Groq", Icons.Default.Extension),
+                                Triple("xai", "xAI Grok", Icons.Default.Star),
+                                Triple("together", "Together", Icons.Default.Share),
                                 Triple("custom", "Local/Ollama", Icons.Default.Cloud)
                             ).chunked(3).forEach { rowItems ->
                                 Row(
