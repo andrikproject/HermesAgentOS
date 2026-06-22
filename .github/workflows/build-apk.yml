@@ -1,0 +1,89 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Create .env for secrets plugin
+        run: |
+          echo "GEMINI_API_KEY=\${{ secrets.GEMINI_API_KEY }}" > .env
+          echo "GEMINI_API_KEY=\${{ secrets.GEMINI_API_KEY }}" > app/.env
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HermesAgentOS-Debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Create .env
+        run: |
+          echo "GEMINI_API_KEY=\${{ secrets.GEMINI_API_KEY }}" > .env
+          echo "GEMINI_API_KEY=\${{ secrets.GEMINI_API_KEY }}" > app/.env
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+        env:
+          KEYSTORE_PATH: \${{ github.workspace }}/keystore.jks
+          STORE_PASSWORD: \${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD: \${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HermesAgentOS-Release
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/*.apk
+          generate_release_notes: true
